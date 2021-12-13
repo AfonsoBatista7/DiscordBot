@@ -65,6 +65,6 @@ module.exports = async (Discord, client, message) => {
     
         command.execute(message,args,client,Discord, profileData);     
     } catch(err) {
-        message.channel.send('That command doesn\'t exist, try \`!commands\`');
+        message.channel.send('That command doesn\'t exist, try \`.commands\`');
     }
 }

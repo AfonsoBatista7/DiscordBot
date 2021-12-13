@@ -8,7 +8,7 @@ module.exports = {
     cooldown: 10,
     description: "Starts the server",
     execute(message, args, client, Discord, profileData) {
-       util.statusFE01('23.97.212.120:25565').then((response) => {
+       util.statusFE01('minenostalgia.tk').then((response) => {
             message.channel.send('The server is already on, try `.server` to see the version and IP.');
         })
         .catch((error) => {

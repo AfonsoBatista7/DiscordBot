@@ -6,7 +6,7 @@ module.exports = {
     cooldown: 10,
     description: 'Tells the user the a lot of information about the minecraft nostalgia server.',
     execute(message, args, client, Discord, profileData) {
-        util.statusFE01('23.97.212.120:25565').then((response) => {
+        util.statusFE01('minenostalgia.tk').then((response) => {
 
             const embed=new Discord.MessageEmbed()
             .setColor('#DF2700')
