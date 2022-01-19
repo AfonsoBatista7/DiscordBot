@@ -1,4 +1,5 @@
 const util = require('minecraft-server-util');
+require('dotenv').config();
 
 module.exports = {
     name: 'server',
@@ -6,7 +7,7 @@ module.exports = {
     cooldown: 10,
     description: 'Tells the user the a lot of information about the minecraft nostalgia server.',
     execute(message, args, client, Discord, profileData) {
-        util.statusFE01('minenostalgia.tk').then((response) => {
+        util.statusLegacy(process.env.MINECRAFT_SERVER_IP).then((response) => {
 
             const embed=new Discord.MessageEmbed()
             .setColor('#DF2700')
@@ -33,7 +34,7 @@ module.exports = {
                         { name: 'Online Players', value: response.onlinePlayers }
                     )
             } 
-                message.channel.send(embed);
+                message.channel.send({embeds: [embed]});
         })
             .catch((error) => {
                 message.channel.send('The server is offline now, try `.start` to start the server :D.');

@@ -59,7 +59,7 @@ module.exports = {
         
         const embed = new Discord.MessageEmbed()
             .setColor('#DF2700')
-            .setAuthor('Mine', avatar)
+            .setAuthor({name: 'Mine', iconURL: avatar})
             .setDescription(mensagem);
 
         if(profileData.coins+value<0) value = profileData.coins;
@@ -72,6 +72,6 @@ module.exports = {
             }
         );
     
-        message.channel.send(embed);
+        message.channel.send({embeds: [embed]});
     }
 }

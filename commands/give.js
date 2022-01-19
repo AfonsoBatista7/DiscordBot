@@ -7,8 +7,12 @@ module.exports = {
     description: "Give money to an user",
     async execute(message, args, client, Discord, profileData) {
         
-        const userAuthor = message.author, userMentioned = message.mentions.users.first(), avatar = userMentioned.displayAvatarURL({}), value = args[1]-(args[1]%1);
+        const userAuthor = message.author, 
+              userMentioned = message.mentions.users.first(), 
+              avatar = userMentioned.displayAvatarURL({}), 
+              value = Math.floor(args[1]);
         try{
+            if(isNaN(val)) throw err;
             try {
                 giverProfile = await profileModel.findOne({userId: userAuthor.id});
                 if(giverProfile.coins < value) throw errNoCoins;
@@ -45,9 +49,9 @@ module.exports = {
 
         const embed = new Discord.MessageEmbed()
             .setColor('#DF2700')
-            .setAuthor(`Received from ${userAuthor.username}`, avatar)
+            .setAuthor({name: `Received from ${userAuthor.username}`, iconURL: avatar})
             .setDescription(`:moneybag: | ${userAuthor.username} gave +${value} :money_with_wings: to <@${userMentioned.id}>`);
         
-        message.channel.send(embed);
+            message.channel.send({embeds: [embed]});
     }
 }

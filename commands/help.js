@@ -13,6 +13,6 @@ module.exports = {
            {name: 'Help', value: `Boas, o meu nome é ${client.user.username}.\nO meu criador é o Ragecraft e tenho como objetivo ajudar aqui no server :D.\nTenta escrever \`.commands\` para ver todos os comandos.`}
        )
         
-       message.channel.send(embed);
+       message.channel.send({embeds: [embed]});
     }
 }

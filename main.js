@@ -1,6 +1,7 @@
+require('dotenv').config();
 const Discord = require('discord.js');
 
-const client = new Discord.Client();
+const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGE_TYPING", "GUILD_MESSAGE_TYPING"]});
 const mongoose = require("mongoose");
 
 const fs = require('fs');
@@ -12,15 +13,13 @@ client.events = new Discord.Collection();
     require(`./handlers/${handler}`)(client, Discord)
 })
 
-mongoose.connect('', {
+mongoose.connect(process.env.MONGODB_TOKEN, {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: true
+    useUnifiedTopology: true
 }).then(()=>{
     console.log('\nConnected to the database :D!');
 }).catch((error) => {
     console.log(error);
 });
 
-client.login('');
+client.login(process.env.DISCORD_TOKEN);

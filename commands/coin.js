@@ -10,7 +10,7 @@ module.exports = {
         const randomNumber = Math.floor(Math.random() * 100);
         const avatar = message.author.displayAvatarURL({});
 
-        let money = args[1];
+        let money = Math.floor(args[1]);
         const headsTails = args[0].toLowerCase();
 
         const coin = {
@@ -60,10 +60,10 @@ module.exports = {
 
         const embed = new Discord.MessageEmbed()
             .setColor('#DF2700')
-            .setAuthor(`${result.toUpperCase()}!`, avatar)
+            .setAuthor({name: `${result.toUpperCase()}!`, iconURL: avatar})
             .setDescription(mensagem);
         
-        message.channel.send(embed);
+        message.channel.send({embeds: [embed]});
 
     }
 }
