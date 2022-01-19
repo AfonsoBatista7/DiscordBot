@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const profileSchema = new mongoose.Schema({
     userId: { type: String, require: true, unique: true },
-    userName: { type: String },
-    coins: { type: Number, default: 250 },
-    numMessages: { type: Number },
+    userName: String,
+    coins: { type: Number, default: 250, get: v => Math.floor(v), set: v => Math.floor(v)},
+    numMessages: Number,
 });
 
 const model = mongoose.model("ProfileModels", profileSchema);
