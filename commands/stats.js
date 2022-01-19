@@ -17,26 +17,29 @@ module.exports = {
                 if(!serverStatsData) throw err;
                 
                 
-                let onlineMessage = serverStatsData.online ? ":green_circle: Online" : ":red_circle: Offline" ;
+                let onlineMessage = serverStatsData.online ? "Online" : "Offline" ;
+                let onlineIcon = serverStatsData.online ? "large-green-circle" : "large-red-circle" ;
 
                 const embed = new Discord.MessageEmbed()
+                .setTitle(`${args[0]} Status`)
                 .setColor('#DF2700')
                 .setThumbnail(`https://minotar.net/helm/${args[0]}/100.png`)
                 .addFields({
                     name: 'Name', value: `${serverStatsData.name}` },{
-                    name: 'Blocks Destroyed', value: `${serverStatsData.blcksDestroyed}` },{
-                    name: 'Blocks Placed', value: `${serverStatsData.blcksPlaced}` },{
-                    name: 'Blocks Mined', value: `${serverStatsData.blockMined}` },{
-                    name: 'Kills', value: `${serverStatsData.kills}` },{
-                    name: 'Mob Kills', value: `${serverStatsData.mobKills}` },{
-                    name: 'Deaths', value: `${serverStatsData.deaths}` },{
+                    name: 'Blocks Placed', value: `${serverStatsData.blcksPlaced}`, inline: true },{
+                    name: 'Blocks Destroyed', value: `${serverStatsData.blcksDestroyed}`, inline: true },{
+                    name: 'Blocks Mined', value: `${serverStatsData.blockMined}` , inline: true},{
+                    name: 'Kills', value: `${serverStatsData.kills}`, inline: true },{
+                    name: 'Mob Kills', value: `${serverStatsData.mobKills}` , inline: true},{
+                    name: 'Deaths', value: `${serverStatsData.deaths}` , inline: true},{
                     name: 'Fish Caught', value: `${serverStatsData.fishCaught}` },{
                     name: 'Times Login', value: `${serverStatsData.timeslogin}` },{
-                    name: 'Last Login', value: `${serverStatsData.lastLogin}` },{
-                    name: 'Player Since', value: `${serverStatsData.playerSince}` },{
-                    name: 'Time Played', value: `${serverStatsData.timePlayed}` },{
-                    name: 'Status', value: `${onlineMessage}` }
+                    name: 'Last Login', value: `${serverStatsData.lastLogin}` , inline: true},{
+                    name: 'Player Since', value: `${serverStatsData.playerSince}` , inline: true},{
+                    name: 'Time Played', value: `${serverStatsData.timePlayed}` , inline: true}
                 )
+                .setFooter({text: `${onlineMessage}`,
+                            iconURL: `https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/apple/125/${onlineIcon}_1f534.png`})
             
                 message.channel.send({embeds: [embed]});
             
