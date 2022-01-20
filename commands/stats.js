@@ -40,6 +40,7 @@ module.exports = {
                     name: 'Player Since', value: `${serverStatsData.playerSince}` , inline: true},{
                     name: 'Time Played', value: `${serverStatsData.timePlayed}` , inline: true}
                 )
+                .setTimestamp()
                 .setFooter({text: `${onlineMessage}`, iconURL: `attachment://${onlineIcon}`})
             
                 message.channel.send({embeds: [embed], files: [attachment]});
