@@ -18,10 +18,12 @@ module.exports = {
                 
                 
                 let onlineMessage = serverStatsData.online ? "Online" : "Offline" ;
-                let onlineIcon = serverStatsData.online ? "large-green-circle" : "large-red-circle" ;
+                let onlineIcon = serverStatsData.online ? "large-green-circle.png"
+                                : "large-red-circle.png" ;
 
+                const attachment = new Discord.MessageAttachment(`images/${onlineIcon}`);
                 const embed = new Discord.MessageEmbed()
-                .setTitle(`${args[0]} Status`)
+                .setTitle(`${args[0]} Stats`)
                 .setColor('#DF2700')
                 .setThumbnail(`https://minotar.net/helm/${args[0]}/100.png`)
                 .addFields({
@@ -38,15 +40,16 @@ module.exports = {
                     name: 'Player Since', value: `${serverStatsData.playerSince}` , inline: true},{
                     name: 'Time Played', value: `${serverStatsData.timePlayed}` , inline: true}
                 )
-                .setFooter({text: `${onlineMessage}`,
-                            iconURL: `https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/apple/125/${onlineIcon}_1f534.png`})
+                .setFooter({text: `${onlineMessage}`, iconURL: `attachment://${onlineIcon}`})
             
-                message.channel.send({embeds: [embed]});
+                message.channel.send({embeds: [embed], files: [attachment]});
             
             } catch(err) {
+                console.log(err);
                 message.channel.send(`:x: | The player **${args[0]}** never played on \`${process.env.MINECRAFT_SERVER_IP.split('.')[0]}\` server.`);
             }
         } catch(err_noArgs) {
+            
             message.channel.send(':x: | You need to specify the name of a Player on the server (\`.stats <playerName>\`)');
         }
     }
