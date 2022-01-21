@@ -3,8 +3,30 @@
     "discord.js": "^13.6.0",
     "dotenv": "^14.2.0",
     "fs": "^0.0.1-security",
-    "minecraft-server-util": "^5.2.8",
+    "minecraft-server-util": "^5.2.9",
     "mongoose": "^6.1.7",
+    "nodejs": "0.0.0",
     "shelljs": "^0.8.5"
-  }
+  },
+  "name": "Bot",
+  "version": "1.0.0",
+  "main": "main.js",
+  "devDependencies": {
+    "node": "^16.13.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AfonsoBatista7/DiscordBot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AfonsoBatista7/DiscordBot/issues"
+  },
+  "homepage": "https://github.com/AfonsoBatista7/DiscordBot#readme",
+  "description": ""
 }
