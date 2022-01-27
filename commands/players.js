@@ -12,7 +12,7 @@ module.exports = {
                 
                 const embed = new Discord.MessageEmbed()
                 .setTitle(`All Players`)
-                .setColor('#DF2700')
+                .setColor('#ADFF2F')
 
                 for(const i in serverStatsData){
                     embed.addFields({

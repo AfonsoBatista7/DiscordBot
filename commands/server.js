@@ -10,7 +10,7 @@ module.exports = {
         util.statusLegacy(process.env.MINECRAFT_SERVER_IP).then((response) => {
 
             const embed=new Discord.MessageEmbed()
-            .setColor('#DF2700')
+            .setColor('#ADFF2F')
             .setTitle('`--Minecraft Nostalgia Server--`')
 
             switch(args[0]) {
