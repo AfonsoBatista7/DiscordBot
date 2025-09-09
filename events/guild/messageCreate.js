@@ -12,6 +12,8 @@ module.exports = async (Discord, client, message) => {
 
     if(message.author.bot) return;
     
+    const isCommand = message.content.startsWith(prefix);
+    
     try{
         profileData = await profileModel.findOne({ userId: user.id })
         if(!profileData) {
@@ -24,20 +26,23 @@ module.exports = async (Discord, client, message) => {
             profile.save();
         }
 
-        await profileModel.findOneAndUpdate({userId: message.author.id},
-            {
-                $inc: {
-                    numMessages: 1,
-                    coins: 1,
-                },
-            }
-        );
+        // Only give coins for regular messages, not commands
+        if (!isCommand) {
+            await profileModel.findOneAndUpdate({userId: message.author.id},
+                {
+                    $inc: {
+                        numMessages: 1,
+                        coins: 1,
+                    },
+                }
+            );
+        }
         
     } catch(err) {
         console.log(err);
     }
     
-    if(!message.content.startsWith(prefix)) return;
+    if(!isCommand) return;
 
     const args = message.content.slice(prefix.length).split(/ +/);
     const cmd = args.shift().toLowerCase();

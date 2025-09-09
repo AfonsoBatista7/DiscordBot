@@ -54,7 +54,7 @@ module.exports = {
             await profileModel.findOneAndUpdate({userId: userMentioned.id}, {
                 $inc: {
                     coins: value,
-                },
+                }
             });
 
             // Success message
