@@ -6,17 +6,15 @@ module.exports = {
     execute(message, args, client, Discord, profileData) {
         const commands = [
             { name: '.help', description: 'Shows this help message' },
-            { name: '.pila', description: 'Conta verdades' },
-            { name: '.youtube', description: 'Dá print do canal do RageCraft :D' },
-            { name: '.stats <playerName>', description: 'Mostra os status de um player num server de Minecraft' },
-            { name: '.server', description: 'Mostra info do server se este estiver aberto' },
-            { name: '.start', description: 'Liga o server se estiver fechado' },
-            { name: '.balance <user>', description: 'Diz o dinheiro que o user tem' },
-            { name: '.profile <user>', description: 'Perfil do user' },
-            { name: '.mine', description: 'Minera até encontrar minérios para ganhar dinheiro' },
+            { name: '.youtube', description: 'Shows RageCraft\'s channel :D' },
+            { name: '.stats <playerName>', description: 'Shows the stats from the Minecraft server player <playerName>' },
+            { name: '.server', description: 'Shows info about a Minecraft server if it is open' },
+            { name: '.balance <user>', description: 'Shows the user money balance' },
+            { name: '.profile <user>', description: 'Shows user profile' },
+            { name: '.mine', description: 'Mine until it finds ores to get money' },
             { name: '.coin <heads/tails> <value>', description: 'Coin flip' },
             { name: '.give <user> <value>', description: 'Give <value> money to an user' },
-            { name: '.medals <playerName>', description: 'Mostra as medalhas de um player' }
+            { name: '.medals <playerName>', description: 'Show the <playerName> medals from the Minecraft server' }
         ];
 
         const commandList = commands.map(cmd => `\`${cmd.name}\` - ${cmd.description}`).join('\n');
