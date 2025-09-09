@@ -17,7 +17,7 @@ module.exports = {
            name: 'User ID', value: `${profileData.userId}` },{
            name: 'Name', value: `${profileData.userName}` },{
            name: 'Money', value: `**${profileData.coins}**$ :money_with_wings:` },{
-           name: 'Número De Mensagens', value: `${profileData.numMessages}` }
+           name: 'Number of Messages', value: `${profileData.numMessages}` }
            )
 
         if(profileData.link!=null) {
