@@ -12,7 +12,7 @@ module.exports = {
         const { args, client, Discord } = options;
         
         try {
-            const allPlayers = await serverStatsModel.find().sort({ timePlayed: -1 });
+            const allPlayers = await serverStatsModel.find().sort({ timePlayedMinutes: -1 });
             
             if (allPlayers.length === 0) {
                 message.channel.send('No players found on the server.');
