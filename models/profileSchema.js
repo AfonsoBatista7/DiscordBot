@@ -5,6 +5,7 @@ const profileSchema = new mongoose.Schema({
     userName: String,
     coins: { type: Number, default: 250, get: v => Math.floor(v), set: v => Math.floor(v)},
     numMessages: Number,
+    link: String
 });
 
 const model = mongoose.model("ProfileModels", profileSchema);

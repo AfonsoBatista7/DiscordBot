@@ -25,7 +25,7 @@ const serverStatsSchema = new mongoose.Schema({
         medalLevel: String
     }],
     online: Boolean,
-
+    link: String
 });
 
 const model = mongoose.model("serverStats", serverStatsSchema);

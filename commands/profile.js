@@ -1,3 +1,4 @@
+const serverStatsModel = require('../models/serverStatsSchema');
 
 module.exports = {
     name: 'profile',
