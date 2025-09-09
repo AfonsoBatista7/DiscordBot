@@ -1,7 +1,7 @@
 const profileModel = require('../models/profileSchema');
 
 const ERRORS = {
-    INVALID_COMMAND: ':x: | Try **!coin** <heads/tails> <money>',
+    INVALID_COMMAND: ':x: | Try **.coin** <heads/tails> <money>',
     INVALID_AMOUNT: ':x: | Please enter a valid amount',
     INSUFFICIENT_FUNDS: ':x: | You don\'t have enough coins :/'
 };
