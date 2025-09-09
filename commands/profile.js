@@ -4,7 +4,7 @@ module.exports = {
     aliases: ['prof'],
     cooldown: 5,
     description: "User Profile",
-    execute(message, args, client, Discord, profileData) {
+    async execute(message, args, client, Discord, profileData) {
         const user = message.mentions.users.first() || message.author;
         const avatar = user.displayAvatarURL({});
 
