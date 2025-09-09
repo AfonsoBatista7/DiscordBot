@@ -17,6 +17,17 @@ module.exports = {
            name: 'Money', value: `**${profileData.coins}**$ :money_with_wings:` },{
            name: 'Número De Mensagens', value: `${profileData.numMessages}` }
            )
+
+        if(profileData.link!=null) {
+            serverStatsData = await serverStatsModel.findOne({link: profileData.userId});
+
+            if(!serverStatsData) throw err;
+
+            embed.addFields({name: 'Minecraft Account', value: `${serverStatsData.name}`})
+        } else {
+            embed.addFields({name: 'Minecraft Account', value: '???'})
+        }
+
     
         message.channel.send({embeds: [embed]});
     }
