@@ -2,18 +2,12 @@
   "dependencies": {
     "discord.js": "^13.6.0",
     "dotenv": "^14.2.0",
-    "fs": "^0.0.1-security",
-    "minecraft-server-util": "^5.2.9",
-    "mongoose": "^6.1.7",
-    "nodejs": "0.0.0",
+    "mongoose": "^6.13.8",
     "shelljs": "^0.8.5"
   },
   "name": "Bot",
   "version": "1.0.0",
   "main": "main.js",
-  "devDependencies": {
-    "node": "^16.13.2"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

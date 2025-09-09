@@ -5,7 +5,8 @@ module.exports = {
     aliases: ['m'],
     cooldown: 2,
     description: "Mine some ores to earn money.",
-    async execute(message, args, client, Discord, profileData) {
+    async execute(message, options) {
+        const { args, client, Discord, profileData } = options;
 
         const randomNumber = Math.floor(Math.random() * 100);
         const avatar = message.author.displayAvatarURL({});

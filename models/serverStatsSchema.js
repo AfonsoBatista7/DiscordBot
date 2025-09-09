@@ -14,6 +14,7 @@ const serverStatsSchema = new mongoose.Schema({
     lastLogin: String,
     playerSince: String,
     timePlayed: String,
+    timePlayedMinutes: { type: Number, default: 0 },
     redstoneUsed: Number,
     enderdragonKills: Number,
     witherKills: Number,
@@ -25,7 +26,7 @@ const serverStatsSchema = new mongoose.Schema({
         medalLevel: String
     }],
     online: Boolean,
-
+    link: String
 });
 
 const model = mongoose.model("serverStats", serverStatsSchema);

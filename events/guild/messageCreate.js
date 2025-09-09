@@ -12,6 +12,8 @@ module.exports = async (Discord, client, message) => {
 
     if(message.author.bot) return;
     
+    const isCommand = message.content.startsWith(prefix);
+    
     try{
         profileData = await profileModel.findOne({ userId: user.id })
         if(!profileData) {
@@ -24,20 +26,23 @@ module.exports = async (Discord, client, message) => {
             profile.save();
         }
 
-        await profileModel.findOneAndUpdate({userId: message.author.id},
-            {
-                $inc: {
-                    numMessages: 1,
-                    coins: 1,
-                },
-            }
-        );
+        // Only give coins for regular messages, not commands
+        if (!isCommand) {
+            await profileModel.findOneAndUpdate({userId: message.author.id},
+                {
+                    $inc: {
+                        numMessages: 1,
+                        coins: 1,
+                    },
+                }
+            );
+        }
         
     } catch(err) {
         console.log(err);
     }
     
-    if(!message.content.startsWith(prefix)) return;
+    if(!isCommand) return;
 
     const args = message.content.slice(prefix.length).split(/ +/);
     const cmd = args.shift().toLowerCase();
@@ -63,8 +68,16 @@ module.exports = async (Discord, client, message) => {
 
         time_stamps.set(message.author.id, current_time);
     
-        command.execute(message,args,client, Discord, profileData);     
+        const options = {
+            args,
+            client,
+            Discord,
+            profileData,
+            // Add any future options here without breaking existing commands
+        };
+        
+        command.execute(message, options);     
     } catch(err) {
-        message.channel.send('That command doesn\'t exist, try \`.commands\`');
+        message.channel.send('That command doesn\'t exist, try \`.help\`');
     }
 }
