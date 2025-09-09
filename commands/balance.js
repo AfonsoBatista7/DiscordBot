@@ -13,9 +13,8 @@ module.exports = {
 
         const embed = new Discord.MessageEmbed()
        .setColor('#DF2700')
-       .setAuthor({name: 'Balance', iconURL: avatar})
-       .setDescription(`You have **${profile.coins}$** in your Wallet`)
-       .setThumbnail('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/twitter/147/money-with-wings_1f4b8.png')
+       .setAuthor({name: '💰 Balance', iconURL: avatar})
+       .setDescription(`💸 You have **${profile.coins}$** in your Wallet`)
     
        message.channel.send({embeds: [embed]});
     }
