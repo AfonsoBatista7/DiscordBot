@@ -17,17 +17,13 @@ module.exports = {
                 if(!serverStatsData) throw err;
                 
                 
-                let onlineMessage = serverStatsData.online ? "Online" : "Offline" ;
-                let onlineIcon = serverStatsData.online ? "large-green-circle.png"
-                                : "large-red-circle.png" ;
-
-                const attachment = new Discord.MessageAttachment(`images/${onlineIcon}`);
+                let onlineMessage = serverStatsData.online ? "🟢 Online" : "🔴 Offline" ;
                 const embed = new Discord.MessageEmbed()
                 .setTitle(`${args[0]} Medals`)
                 .setColor('#ADFF2F')
                 .setThumbnail(`https://minotar.net/helm/${args[0]}/100.png`)
                 .setTimestamp()
-                .setFooter({text: `${onlineMessage}`, iconURL: `attachment://${onlineIcon}`})
+                .setFooter({text: `${onlineMessage}`})
             
                 for(const i in serverStatsData.medals) {    
                     embed.addFields({
@@ -35,7 +31,7 @@ module.exports = {
                     )
                 }
 
-                message.channel.send({embeds: [embed], files: [attachment]});
+                message.channel.send({embeds: [embed]});
             
             } catch(err) {
                 console.log(err);

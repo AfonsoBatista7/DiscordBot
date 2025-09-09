@@ -22,4 +22,18 @@ mongoose.connect(process.env.MONGODB_TOKEN, {
     console.log(error);
 });
 
+// Global error handlers
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Discord client error handler
+client.on('error', (error) => {
+    console.error('Discord client error:', error);
+});
+
 client.login(process.env.DISCORD_TOKEN);

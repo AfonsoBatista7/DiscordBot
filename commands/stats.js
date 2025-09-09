@@ -17,11 +17,7 @@ module.exports = {
                 if(!serverStatsData) throw err;
                 
                 
-                let onlineMessage = serverStatsData.online ? "Online" : "Offline" ;
-                let onlineIcon = serverStatsData.online ? "large-green-circle.png"
-                                : "large-red-circle.png" ;
-
-                const attachment = new Discord.MessageAttachment(`images/${onlineIcon}`);
+                let onlineMessage = serverStatsData.online ? "🟢 Online" : "🔴 Offline" ;
                 const embed = new Discord.MessageEmbed()
                 .setTitle(`${args[0]} Stats`)
                 .setColor('#ADFF2F')
@@ -41,9 +37,9 @@ module.exports = {
                     name: 'Time Played', value: `${serverStatsData.timePlayed}` , inline: true}
                 )
                 .setTimestamp()
-                .setFooter({text: `${onlineMessage}`, iconURL: `attachment://${onlineIcon}`})
+                .setFooter({text: `${onlineMessage}`})
             
-                message.channel.send({embeds: [embed], files: [attachment]});
+                message.channel.send({embeds: [embed]});
             
             } catch(err) {
                 console.log(err);
