@@ -12,7 +12,8 @@ module.exports = {
     aliases: ['serverstats', 'minestats'],
     cooldown: 5,
     description: "Minecraft Server Stats of a player",
-    async execute(message, args, client, Discord, profileData) {
+    async execute(message, options) {
+        const { args, client, Discord, profileData } = options;
         let playerName;
         let serverStatsData;
 

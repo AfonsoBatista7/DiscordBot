@@ -5,7 +5,8 @@ module.exports = {
     aliases: ['bal', 'balen', 'bale', 'bl'],
     cooldown: 2,
     description: "Prints the user balance",
-    async execute(message, args, client, Discord, profileData) {
+    async execute(message, options) {
+        const { args, client, Discord, profileData } = options;
 
         const user = message.mentions.users.first() || message.author;
         const avatar = user.displayAvatarURL({});

@@ -3,7 +3,8 @@ module.exports = {
     aliases: ['commands', 'com'],
     cooldown: 5,
     description: "Helps the user and shows all commands",
-    execute(message, args, client, Discord, profileData) {
+    execute(message, options) {
+        const { args, client, Discord, profileData } = options;
         const commands = [
             { name: '.help', description: 'Shows this help message' },
             { name: '.youtube', description: 'Shows RageCraft\'s channel :D' },

@@ -11,7 +11,8 @@ module.exports = {
     aliases: ['c'],
     cooldown: 5,
     description: "Flip a coin",
-    async execute(message, args, client, Discord, profileData) {
+    async execute(message, options) {
+        const { args, client, Discord, profileData } = options;
         // Validate input
         if (args.length < 2) {
             message.channel.send(ERRORS.INVALID_COMMAND);

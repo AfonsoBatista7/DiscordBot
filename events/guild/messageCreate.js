@@ -63,7 +63,15 @@ module.exports = async (Discord, client, message) => {
 
         time_stamps.set(message.author.id, current_time);
     
-        command.execute(message, args, client, Discord, profileData);     
+        const options = {
+            args,
+            client,
+            Discord,
+            profileData,
+            // Add any future options here without breaking existing commands
+        };
+        
+        command.execute(message, options);     
     } catch(err) {
         message.channel.send('That command doesn\'t exist, try \`.help\`');
     }

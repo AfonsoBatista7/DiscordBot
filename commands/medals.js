@@ -6,7 +6,8 @@ module.exports = {
     aliases: ['me', 'playermedals', 'med', 'pm'],
     cooldown: 5,
     description: "Minecraft Server Medals of a player",
-    async execute(message, args, client, Discord, profileData) {
+    async execute(message, options) {
+        const { args, client, Discord, profileData } = options;
 
         try{
             if(args[0]==null) throw err_noArgs;

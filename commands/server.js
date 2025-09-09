@@ -6,7 +6,8 @@ module.exports = {
     aliases: ['serv','ser'],
     cooldown: 10,
     description: 'Tells the user the a lot of information about the minecraft nostalgia server.',
-    execute(message, args, client, Discord, profileData) {
+    execute(message, options) {
+        const { args, client, Discord, profileData } = options;
         util.statusLegacy(process.env.MINECRAFT_SERVER_IP).then((response) => {
 
             const embed=new Discord.MessageEmbed()
@@ -38,7 +39,7 @@ module.exports = {
         })
             .catch((error) => {
 		console.log(error);
-                message.channel.send('The server is offline now, try `.start` to start the server :D.');
+                message.channel.send('The server is offline now... :c');
             });
     }
 }
