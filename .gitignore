@@ -29,3 +29,6 @@ Thumbs.db
 
 # Production build (if using)
 out/
+
+# Docker images
+*.tar
