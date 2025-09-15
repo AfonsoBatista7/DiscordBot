@@ -1,13 +1,21 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const serverStatsModel = require('../models/serverStatsSchema');
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('profile')
+        .setDescription('View your or another user\'s profile')
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('The user to view profile for')
+                .setRequired(false)),
     name: 'profile',
     aliases: ['prof'],
     cooldown: 5,
     description: "User Profile",
-    async execute(message, options) {
-        const { args, client, Discord, profileData } = options;
-        const user = message.mentions.users.first() || message.author;
+    async execute(interaction, options) {
+        const { client, Discord, profileData } = options;
+        const user = interaction.options.getUser('user') || interaction.user;
         const avatar = user.displayAvatarURL({});
 
         const embed = new Discord.MessageEmbed()
@@ -31,6 +39,6 @@ module.exports = {
         }
 
     
-        message.channel.send({embeds: [embed]});
+        await interaction.reply({embeds: [embed]});
     }
 }

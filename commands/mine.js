@@ -1,15 +1,19 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const profileModel = require('../models/profileSchema');
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('mine')
+        .setDescription('Mine some ores to earn money'),
     name: 'mine',
     aliases: ['m'],
     cooldown: 2,
     description: "Mine some ores to earn money.",
-    async execute(message, options) {
-        const { args, client, Discord, profileData } = options;
+    async execute(interaction, options) {
+        const { client, Discord, profileData } = options;
 
         const randomNumber = Math.floor(Math.random() * 100);
-        const avatar = message.author.displayAvatarURL({});
+        const avatar = interaction.user.displayAvatarURL({});
 
         let value, minerio, sign = '+';
 
@@ -65,14 +69,14 @@ module.exports = {
 
         if(profileData.coins+value<0) value = profileData.coins;
 
-        await profileModel.findOneAndUpdate({userId: message.author.id},
+        await profileModel.findOneAndUpdate({userId: interaction.user.id},
             {
                 $inc: {
                     coins: value,
                 },
             }
         );
-    
-        message.channel.send({embeds: [embed]});
+
+        await interaction.reply({embeds: [embed]});
     }
 }

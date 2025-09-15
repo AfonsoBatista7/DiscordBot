@@ -1,3 +1,4 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const serverStatsModel = require('../models/serverStatsSchema');
 require('dotenv').config();
 
@@ -15,42 +16,51 @@ function TimePlayedMinutesToString(timePlayedMinutes) {
 }
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('stats')
+        .setDescription('Get Minecraft server stats of a player')
+        .addStringOption(option =>
+            option.setName('player')
+                .setDescription('The name of the player')
+                .setRequired(false)),
     name: 'stats',
     aliases: ['serverstats', 'minestats'],
     cooldown: 5,
     description: "Minecraft Server Stats of a player",
-    async execute(message, options) {
-        const { args, client, Discord, profileData } = options;
+    async execute(interaction, options) {
+        const { client, Discord, profileData } = options;
         let playerName;
         let serverStatsData;
 
         try {
-            // Determine player name
-            if (args.length === 0) {
+            // Get player name from slash command option or use linked profile
+            const playerOption = interaction.options.getString('player');
+
+            if (!playerOption) {
                 if (profileData.link != null) {
-                    serverStatsData = 
+                    serverStatsData =
                         await serverStatsModel.findOne({link: profileData.userId});
 
                     if(!serverStatsData) throw error;
                     playerName = serverStatsData.name;
                 } else {
-                    message.channel.send(ERRORS.NO_PLAYER_NAME);
+                    await interaction.reply(ERRORS.NO_PLAYER_NAME);
                     return;
                 }
             } else {
-                playerName = args[0];
-                serverStatsData = 
+                playerName = playerOption;
+                serverStatsData =
                     await serverStatsModel.findOne({name: playerName})
             }
                 
 
             if (!serverStatsData) {
-                message.channel.send(ERRORS.PLAYER_NOT_FOUND(playerName));
+                await interaction.reply(ERRORS.PLAYER_NOT_FOUND(playerName));
                 return;
             }
 
             let onlineMessage = serverStatsData.online ? "🟢 Online" : "🔴 Offline";
-            
+
             const embed = new Discord.MessageEmbed()
                 .setTitle(`${playerName} Stats`)
                 .setColor('#ADFF2F')
@@ -71,12 +81,12 @@ module.exports = {
                 )
                 .setTimestamp()
                 .setFooter({text: `${onlineMessage}`});
-            
-            message.channel.send({embeds: [embed]});
+
+            await interaction.reply({embeds: [embed]});
             
         } catch(error) {
             console.error('Database error in stats command:', error);
-            message.channel.send(ERRORS.DATABASE_ERROR);
+            await interaction.reply(ERRORS.DATABASE_ERROR);
         }
     }
 }

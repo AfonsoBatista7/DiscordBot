@@ -1,21 +1,25 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const serverStatsModel = require('../models/serverStatsSchema');
 require('dotenv').config();
 
 const PLAYERS_PER_PAGE = 25;
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('players')
+        .setDescription('Shows all Minecraft server players with pagination'),
     name: 'players',
     aliases: ['serverplayers', 'p'],
     cooldown: 5,
     description: "Shows all Minecraft server players with pagination",
-    async execute(message, options) {
-        const { args, client, Discord } = options;
+    async execute(interaction, options) {
+        const { client, Discord } = options;
         
         try {
             const allPlayers = await serverStatsModel.find().sort({ timePlayedMinutes: -1 });
             
             if (allPlayers.length === 0) {
-                message.channel.send('No players found on the server.');
+                await interaction.reply('No players found on the server.');
                 return;
             }
 
@@ -62,9 +66,10 @@ module.exports = {
             const embed = createEmbed(currentPage);
             const row = createButtons(currentPage);
 
-            const response = await message.channel.send({
+            const response = await interaction.reply({
                 embeds: [embed],
-                components: totalPages > 1 ? [row] : []
+                components: totalPages > 1 ? [row] : [],
+                fetchReply: true
             });
 
             if (totalPages > 1) {
@@ -72,22 +77,22 @@ module.exports = {
                     time: 60000 // 1 minute timeout
                 });
 
-                collector.on('collect', async (interaction) => {
-                    if (interaction.user.id !== message.author.id) {
-                        await interaction.reply({ content: 'These buttons are not for you!', ephemeral: true });
+                collector.on('collect', async (buttonInteraction) => {
+                    if (buttonInteraction.user.id !== interaction.user.id) {
+                        await buttonInteraction.reply({ content: 'These buttons are not for you!', ephemeral: true });
                         return;
                     }
 
-                    if (interaction.customId === 'previous') {
+                    if (buttonInteraction.customId === 'previous') {
                         currentPage = Math.max(0, currentPage - 1);
-                    } else if (interaction.customId === 'next') {
+                    } else if (buttonInteraction.customId === 'next') {
                         currentPage = Math.min(totalPages - 1, currentPage + 1);
                     }
 
                     const newEmbed = createEmbed(currentPage);
                     const newRow = createButtons(currentPage);
 
-                    await interaction.update({
+                    await buttonInteraction.update({
                         embeds: [newEmbed],
                         components: [newRow]
                     });
@@ -115,7 +120,7 @@ module.exports = {
 
         } catch (error) {
             console.error('Error in players command:', error);
-            message.channel.send(':x: | Something went wrong while fetching players.');
+            await interaction.reply(':x: | Something went wrong while fetching players.');
         }
     }
 }
