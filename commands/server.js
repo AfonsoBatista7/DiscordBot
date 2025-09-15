@@ -1,13 +1,26 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const https = require('https');
 require('dotenv').config();
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('server')
+        .setDescription('Get information about the Minecraft server')
+        .addStringOption(option =>
+            option.setName('info')
+                .setDescription('What information to show')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'IP Address', value: 'ip' },
+                    { name: 'Version', value: 'version' }
+                )),
     name: 'server',
     aliases: ['serv','ser'],
     cooldown: 10,
     description: 'Tells the user the a lot of information about the minecraft nostalgia server.',
-    async execute(message, options) {
-        const { args, client, Discord } = options;
+    async execute(interaction, options) {
+        const { client, Discord } = options;
+        const infoType = interaction.options.getString('info');
         
         const checkServer = (serverIP) => {
             return new Promise((resolve, reject) => {
@@ -44,7 +57,7 @@ module.exports = {
                         { name: 'Server IP', value: process.env.MINECRAFT_SERVER_IP }
                     )
                     .setDescription('The server is not online now :(');
-                message.channel.send({embeds: [offlineEmbed]});
+                await interaction.reply({embeds: [offlineEmbed]});
                 return;
             }
 
@@ -54,7 +67,7 @@ module.exports = {
 
             const serverIP = process.env.MINECRAFT_SERVER_IP;
             
-            switch(args[0]) {
+            switch(infoType) {
                 case 'ip':
                     embed.addFields(
                         { name: 'Status', value: '🟢 Online'},
@@ -79,7 +92,7 @@ module.exports = {
                         { name: 'Online Players', value: `${playersOnline}/${playersMax}` }
                     )
             } 
-            message.channel.send({embeds: [embed]});
+            await interaction.reply({embeds: [embed]});
         
         } catch(error) {
             console.log('Server command error:', error);
@@ -94,7 +107,7 @@ module.exports = {
                     { name: 'Server IP', value: serverIP }
                 )
                 .setDescription('The server is not online now :(');
-            message.channel.send({embeds: [errorEmbed]});
+            await interaction.reply({embeds: [errorEmbed]});
         }
     }
 }

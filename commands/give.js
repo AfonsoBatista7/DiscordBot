@@ -1,3 +1,4 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const profileModel = require('../models/profileSchema');
 
 const ERRORS = {
@@ -10,42 +11,43 @@ const ERRORS = {
 };
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('give')
+        .setDescription('Give money to another user')
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('The user to give money to')
+                .setRequired(true))
+        .addIntegerOption(option =>
+            option.setName('amount')
+                .setDescription('Amount of money to give')
+                .setRequired(true)
+                .setMinValue(1)),
     name: 'give',
     aliases: ['g', 'giv'],
     cooldown: 2,
     description: "Give money to an user",
-    async execute(message, options) {
-        const { args, client, Discord } = options;
-        
-        // Validate user mention
-        const userMentioned = message.mentions.users.first();
-        if (!userMentioned) {
-            message.channel.send(ERRORS.NO_USER_MENTIONED);
-            return;
-        }
+    async execute(interaction, options) {
+        const { client, Discord } = options;
 
-        // Validate amount
-        if (args.length < 2) {
-            message.channel.send(ERRORS.INVALID_COMMAND);
-            return;
-        }
+        const userMentioned = interaction.options.getUser('user');
+        const value = interaction.options.getInteger('amount');
 
-        const value = Math.floor(args[1]);
-        if (isNaN(value) || value <= 0) {
-            message.channel.send(ERRORS.INVALID_AMOUNT);
+        if (value <= 0) {
+            await interaction.reply(ERRORS.INVALID_AMOUNT);
             return;
         }
 
         try {
             // Get the author's profile to check balance
-            const authorProfile = await profileModel.findOne({ userId: message.author.id });
+            const authorProfile = await profileModel.findOne({ userId: interaction.user.id });
             if (!authorProfile || authorProfile.coins < value) {
-                message.channel.send(ERRORS.INSUFFICIENT_FUNDS);
+                await interaction.reply(ERRORS.INSUFFICIENT_FUNDS);
                 return;
             }
 
             // Transfer money
-            await profileModel.findOneAndUpdate({userId: message.author.id}, { 
+            await profileModel.findOneAndUpdate({userId: interaction.user.id}, {
                 $inc: {
                     coins: -value,
                 }
@@ -61,18 +63,18 @@ module.exports = {
             const avatar = userMentioned.displayAvatarURL({});
             const embed = new Discord.MessageEmbed()
                 .setColor('#DF2700')
-                .setAuthor({name: `Received from ${message.author.username}`, iconURL: avatar})
-                .setDescription(`💰 | ${message.author.username} gave +${value} 💸 to <@${userMentioned.id}>`);
-            
-            message.channel.send({embeds: [embed]});
+                .setAuthor({name: `Received from ${interaction.user.username}`, iconURL: avatar})
+                .setDescription(`💰 | ${interaction.user.username} gave +${value} 💸 to <@${userMentioned.id}>`);
+
+            await interaction.reply({embeds: [embed]});
 
         } catch(error) {
             // Check if error is because recipient has no profile
             if (error.message && error.message.includes('null')) {
-                message.channel.send(ERRORS.USER_NO_PROFILE(userMentioned.id));
+                await interaction.reply(ERRORS.USER_NO_PROFILE(userMentioned.id));
             } else {
                 console.error('Database error in give command:', error);
-                message.channel.send(ERRORS.DATABASE_ERROR);
+                await interaction.reply(ERRORS.DATABASE_ERROR);
             }
         }
     }
