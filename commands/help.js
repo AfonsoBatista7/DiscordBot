@@ -29,7 +29,7 @@ module.exports = {
         const embed = new Discord.MessageEmbed()
             .setColor('#DF2700')
             .addFields(
-                {name: 'Help', value: `Boas, o meu nome é ${client.user.username}.\nO meu criador é o Ragecraft e tenho como objetivo ajudar aqui no server :D.`},
+                {name: 'Help', value: `Hey, my name is ${client.user.username}.\nMy objective is to help here on the server :D`},
                 {name: 'Available Commands', value: commandList}
             );
         
