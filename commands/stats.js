@@ -8,9 +8,9 @@ const ERRORS = {
     DATABASE_ERROR: ':x: | Something went wrong, please try again'
 };
 
-function TimePlayedMinutesToString(timePlayedMinutes) {
-    let hours = Math.floor(timePlayedMinutes/60);
-    let minutes = (timePlayedMinutes % 60);
+function TimeMinutesToString(timeMinutes) {
+    let hours = Math.floor(timeMinutes/60);
+    let minutes = (timeMinutes % 60);
 
     return minutes==0 ? `${hours} Hours` : `${hours} Hr ${minutes} Min`;
 }
@@ -77,7 +77,8 @@ module.exports = {
                     name: 'Times Login', value: `${serverStatsData.timeslogin}` },{
                     name: 'Last Login', value: `${serverStatsData.lastLogin}` , inline: true},{
                     name: 'Player Since', value: `${serverStatsData.playerSince}` , inline: true},{
-                    name: 'Time Played', value: `${TimePlayedMinutesToString(serverStatsData.timePlayedMinutes)}` , inline: true}
+                    name: 'Time Played', value: `${TimeMinutesToString(serverStatsData.timePlayedMinutes)}` , inline: true},{
+                    name: 'Time AFK', value: `${TimeMinutesToString(serverStatsData.timeAFKMinutes)}` , inline: true}
                 )
                 .setTimestamp()
                 .setFooter({text: `${onlineMessage}`});
