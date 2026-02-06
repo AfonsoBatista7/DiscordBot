@@ -1,10 +1,17 @@
-require('dotenv').config();
+const fs = require('fs');
 const Discord = require('discord.js');
-
-const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGE_TYPING", "GUILD_MESSAGE_TYPING"]});
 const mongoose = require("mongoose");
 
-const fs = require('fs');
+function readSecret(name) {
+    const filePath = process.env[`${name}_FILE`];
+    if (filePath && fs.existsSync(filePath)) return fs.readFileSync(filePath, 'utf8').trim();
+    return process.env[name];
+}
+
+const DISCORD_TOKEN = readSecret('DISCORD_TOKEN');
+const MONGODB_TOKEN = readSecret('MONGODB_TOKEN');
+
+const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGE_TYPING", "GUILD_MESSAGE_TYPING"]});
 
 client.commands = new Discord.Collection();
 client.events = new Discord.Collection();
@@ -13,7 +20,7 @@ client.events = new Discord.Collection();
     require(`./handlers/${handler}`)(client, Discord)
 })
 
-mongoose.connect(process.env.MONGODB_TOKEN, {
+mongoose.connect(MONGODB_TOKEN, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(()=>{
@@ -36,4 +43,4 @@ client.on('error', (error) => {
     console.error('Discord client error:', error);
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(DISCORD_TOKEN);

@@ -1,7 +1,12 @@
-require('dotenv').config();
+const fs = require('node:fs');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const fs = require('node:fs');
+
+function readSecret(name) {
+    const filePath = process.env[`${name}_FILE`];
+    if (filePath && fs.existsSync(filePath)) return fs.readFileSync(filePath, 'utf8').trim();
+    return process.env[name];
+}
 
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -13,7 +18,7 @@ for (const file of commandFiles) {
     }
 }
 
-const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN);
+const rest = new REST({ version: '9' }).setToken(readSecret('DISCORD_TOKEN'));
 
 (async () => {
     try {
@@ -21,7 +26,7 @@ const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN);
 
         // For global commands (takes up to 1 hour to update)
         const data = await rest.put(
-            Routes.applicationCommands(process.env.CLIENT_ID),
+            Routes.applicationCommands(readSecret('CLIENT_ID')),
             { body: commands },
         );
 
