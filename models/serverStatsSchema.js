@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const serverStatsSchema = new mongoose.Schema({
     playerId: { type: String, require: true, unique: true },
     name: {type: String, require: true},
-    names: [String],
     blcksDestroyed: Number,
     blcksPlaced: Number,
     kills: Number,
@@ -25,6 +24,17 @@ const serverStatsSchema = new mongoose.Schema({
         medalName: String,
         medalLevel: String
     }],
+    blocks: [{
+        bName: String,
+        bNumDestroyed: Number,
+        bNumPlaced: Number,
+    }],
+    mobsKilled: [{
+        mId: Number,
+        mName: String,
+        mNumKilled: Number
+    }],
+    customTags: [String],
     online: Boolean,
     link: String
 });
