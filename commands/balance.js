@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const profileModel = require('../models/profileSchema');
+const platformstatsModel = require('../models/platformstatsSchema');
+const identityModel = require('../models/identitySchema');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,13 +19,21 @@ module.exports = {
 
         const user = interaction.options.getUser('user') || interaction.user;
         const avatar = user.displayAvatarURL({});
-        const profile = await profileModel.findOne({ userId: user.id });
+
+        let balance;
+        if (user.id === interaction.user.id) {
+            balance = profileData.balance;
+        } else {
+            const identity = await identityModel.findOne({ externalId: user.id, provider: 'discord' });
+            const platformstats = identity ? await platformstatsModel.findOne({ identityId: identity._id }) : null;
+            balance = platformstats ? platformstats.balance : 0;
+        }
 
         const embed = new Discord.MessageEmbed()
-       .setColor('#DF2700')
-       .setAuthor({name: '💰 Balance', iconURL: avatar})
-       .setDescription(`💸 You have **${profile.coins}$** in your Wallet`)
+           .setColor('#DF2700')
+           .setAuthor({name: '💰 Balance', iconURL: avatar})
+           .setDescription(`💸 You have **${balance}$** in your Wallet`);
 
-       await interaction.reply({embeds: [embed]});
+        await interaction.reply({embeds: [embed]});
     }
 }

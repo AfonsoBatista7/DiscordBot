@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const serverStatsModel = require('../models/serverStatsSchema');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,26 +18,20 @@ module.exports = {
         const avatar = user.displayAvatarURL({});
 
         const embed = new Discord.MessageEmbed()
-       .setColor('#DF2700')
-       .setThumbnail(avatar)
-       .addFields({
-           name: 'User ID', value: `${profileData.userId}` },{
-           name: 'Name', value: `${profileData.userName}` },{
-           name: 'Money', value: `**${profileData.coins}**$ :money_with_wings:` },{
-           name: 'Number of Messages', value: `${profileData.numMessages}` }
-           )
+           .setColor('#DF2700')
+           .setThumbnail(avatar)
+           .addFields({
+               name: 'User ID', value: `${profileData.userId}` },{
+               name: 'Name', value: `${profileData.userName}` },{
+               name: 'Money', value: `**${profileData.balance}**$ :money_with_wings:` },{
+               name: 'Number of Messages', value: `${profileData.numMessages}` }
+           );
 
-        if(profileData.link!=null) {
-            serverStatsData = await serverStatsModel.findOne({link: profileData.userId});
+        embed.addFields({
+            name: 'Minecraft Account',
+            value: profileData.mcUsername || '???'
+        });
 
-            if(!serverStatsData) throw err;
-
-            embed.addFields({name: 'Minecraft Account', value: `${serverStatsData.name}`})
-        } else {
-            embed.addFields({name: 'Minecraft Account', value: '???'})
-        }
-
-    
         await interaction.reply({embeds: [embed]});
     }
 }

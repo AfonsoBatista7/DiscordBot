@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const profileModel = require('../models/profileSchema');
+const platformstatsModel = require('../models/platformstatsSchema');
 
 const ERRORS = {
     INVALID_AMOUNT: ':x: | Please enter a valid amount',
@@ -38,7 +38,7 @@ module.exports = {
             return;
         }
 
-        if (profileData.coins < money) {
+        if (profileData.balance < money) {
             await interaction.reply(ERRORS.INSUFFICIENT_FUNDS);
             return;
         }
@@ -64,9 +64,9 @@ module.exports = {
         }
 
         try {
-            await profileModel.findOneAndUpdate({userId: interaction.user.id}, {
+            await platformstatsModel.findOneAndUpdate({ identityId: profileData.identityId }, {
                 $inc: {
-                    coins: coinChange,
+                    balance: coinChange,
                 },
             });
 

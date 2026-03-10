@@ -7,34 +7,35 @@ const MONGODB_TOKEN = process.env.MONGODB_TOKEN_FILE
     ? fs.readFileSync(process.env.MONGODB_TOKEN_FILE, 'utf8').trim()
     : process.env.MONGODB_TOKEN;
 
-const serverStatsModel = require('../models/serverStatsSchema');
+const gamestatModel = require('../models/gamestatSchema');
 
 // Fields and their defaults for missing documents
 // Using $exists: false queries directly against MongoDB so Mongoose defaults don't mask missing fields
 const fieldDefaults = {
-    blcksDestroyed: 0,
-    blcksPlaced: 0,
-    kills: 0,
-    mobKills: 0,
-    mTravelled: 0,
-    deaths: 0,
-    timeslogin: 0,
+    // Root-level fields
     lastLogin: 'N/A',
     playerSince: 'N/A',
     timePlayedMinutes: 0,
     timeAFKMinutes: 0,
-    redstoneUsed: 0,
-    enderdragonKills: 0,
-    witherKills: 0,
-    fishCaught: 0,
-    blockMined: 0,
-    online: false,
-    // Arrays
-    names: [],
+    status: false,
     versionPlayed: [],
     medals: [],
-    blocks: [],
-    mobsKilled: [],
+    customTags: [],
+    // Nested stats fields
+    'stats.blcksDestroyed': 0,
+    'stats.blcksPlaced': 0,
+    'stats.kills': 0,
+    'stats.mobKills': 0,
+    'stats.mTravelled': 0,
+    'stats.deaths': 0,
+    'stats.timeslogin': 0,
+    'stats.redstoneUsed': 0,
+    'stats.enderdragonKills': 0,
+    'stats.witherKills': 0,
+    'stats.fishCaught': 0,
+    'stats.blockMined': 0,
+    'stats.blocks': [],
+    'stats.mobsKilled': [],
 };
 
 async function normalize() {
@@ -44,12 +45,11 @@ async function normalize() {
     });
     console.log('Connected to MongoDB\n');
 
-    const totalPlayers = await serverStatsModel.countDocuments();
+    const totalPlayers = await gamestatModel.countDocuments();
     console.log(`Total players in database: ${totalPlayers}\n`);
 
     for (const [field, defaultValue] of Object.entries(fieldDefaults)) {
-        // Query MongoDB directly for docs where the field doesn't exist
-        const result = await serverStatsModel.updateMany(
+        const result = await gamestatModel.updateMany(
             { [field]: { $exists: false } },
             { $set: { [field]: defaultValue } }
         );
@@ -61,13 +61,13 @@ async function normalize() {
 
     // Convert Int32 fields to Int64 (Long) for Java compatibility
     const longFields = [
-        'blcksDestroyed', 'blcksPlaced', 'kills', 'mobKills',
-        'mTravelled', 'deaths', 'timeslogin', 'timePlayedMinutes',
-        'timeAFKMinutes', 'redstoneUsed', 'enderdragonKills',
-        'witherKills', 'fishCaught', 'blockMined'
+        'timePlayedMinutes', 'timeAFKMinutes',
+        'stats.blcksDestroyed', 'stats.blcksPlaced', 'stats.kills', 'stats.mobKills',
+        'stats.mTravelled', 'stats.deaths', 'stats.timeslogin', 'stats.redstoneUsed',
+        'stats.enderdragonKills', 'stats.witherKills', 'stats.fishCaught', 'stats.blockMined',
     ];
 
-    const collection = serverStatsModel.collection;
+    const collection = gamestatModel.collection;
     for (const field of longFields) {
         const result = await collection.updateMany(
             { [field]: { $type: 'int' } },
@@ -76,16 +76,6 @@ async function normalize() {
         if (result.modifiedCount > 0) {
             console.log(`  "${field}" - converted Int32 to Int64 for ${result.modifiedCount} players`);
         }
-    }
-
-    // Remove the misspelled "block" field from previous run
-    // Use native MongoDB collection to bypass Mongoose strict mode
-    const cleanup = await collection.updateMany(
-        { block: { $exists: true } },
-        { $unset: { block: '' } }
-    );
-    if (cleanup.modifiedCount > 0) {
-        console.log(`\n  Removed stale "block" field from ${cleanup.modifiedCount} players`);
     }
 
     console.log('\nDone. All players normalized.');

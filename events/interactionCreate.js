@@ -1,4 +1,6 @@
-const profileModel = require('../models/profileSchema');
+const platformstatsModel = require('../models/platformstatsSchema');
+const identityModel = require('../models/identitySchema');
+const userModel = require('../models/userSchema');
 
 module.exports = {
     name: 'interactionCreate',
@@ -10,18 +12,45 @@ module.exports = {
         if (!command) return;
 
         try {
-            // Get user profile data (same as message commands)
-            let profileData = await profileModel.findOne({ userId: interaction.user.id });
-            if (!profileData) {
-                let profile = await profileModel.create({
-                    userId: interaction.user.id,
-                    serverID: interaction.guild.id,
-                    coins: 1000,
-                    bank: 0,
+            // Find or create Discord identity by externalId (Discord user ID)
+            let discordIdentity = await identityModel.findOne({ externalId: interaction.user.id, provider: 'discord' });
+            if (!discordIdentity) {
+                const user = await userModel.create({});
+                discordIdentity = await identityModel.create({
+                    userId: user._id,
+                    externalId: interaction.user.id,
+                    username: interaction.user.username,
+                    provider: 'discord',
                 });
-                profile.save();
-                profileData = profile;
             }
+
+            let platformstats = await platformstatsModel.findOne({ identityId: discordIdentity._id });
+            if (!platformstats) {
+                platformstats = await platformstatsModel.create({
+                    identityId: discordIdentity._id,
+                    balance: 1000,
+                    numMessages: 0,
+                });
+                await platformstats.save();
+            }
+
+            // Find linked Minecraft identity (same physical userId)
+            const mcIdentity = discordIdentity.userId
+                ? await identityModel.findOne({ userId: discordIdentity.userId, provider: 'minecraft' })
+                : null;
+
+            const profileData = {
+                userId: interaction.user.id,
+                identityId: discordIdentity._id,
+                physicalUserId: discordIdentity.userId,
+                userName: interaction.user.username,
+                balance: platformstats.balance,
+                coins: platformstats.balance,
+                numMessages: platformstats.numMessages,
+                link: mcIdentity ? mcIdentity.externalId : null,
+                mcUsername: mcIdentity ? mcIdentity.username : null,
+                mcIdentityId: mcIdentity ? mcIdentity._id : null,
+            };
 
             const options = {
                 client,

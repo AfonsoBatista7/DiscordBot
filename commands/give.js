@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const profileModel = require('../models/profileSchema');
+const platformstatsModel = require('../models/platformstatsSchema');
+const identityModel = require('../models/identitySchema');
 
 const ERRORS = {
     INVALID_COMMAND: ':x: | Try -> `.give <user> <value>`',
@@ -39,24 +40,24 @@ module.exports = {
         }
 
         try {
-            // Get the author's profile to check balance
-            const authorProfile = await profileModel.findOne({ userId: interaction.user.id });
-            if (!authorProfile || authorProfile.coins < value) {
+            if (profileData.balance < value) {
                 await interaction.reply(ERRORS.INSUFFICIENT_FUNDS);
                 return;
             }
 
+            const recipientIdentity = await identityModel.findOne({ externalId: userMentioned.id, provider: 'discord' });
+            if (!recipientIdentity) {
+                await interaction.reply(ERRORS.USER_NO_PROFILE(userMentioned.id));
+                return;
+            }
+
             // Transfer money
-            await profileModel.findOneAndUpdate({userId: interaction.user.id}, {
-                $inc: {
-                    coins: -value,
-                }
+            await platformstatsModel.findOneAndUpdate({ identityId: profileData.identityId }, {
+                $inc: { balance: -value }
             });
 
-            await profileModel.findOneAndUpdate({userId: userMentioned.id}, {
-                $inc: {
-                    coins: value,
-                }
+            await platformstatsModel.findOneAndUpdate({ identityId: recipientIdentity._id }, {
+                $inc: { balance: value }
             });
 
             // Success message

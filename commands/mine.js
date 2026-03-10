@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const profileModel = require('../models/profileSchema');
+const platformstatsModel = require('../models/platformstatsSchema');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -67,12 +67,12 @@ module.exports = {
             .setAuthor({name: 'Mine', iconURL: avatar})
             .setDescription(mensagem);
 
-        if(profileData.coins+value<0) value = profileData.coins;
+        if(profileData.balance+value<0) value = profileData.balance;
 
-        await profileModel.findOneAndUpdate({userId: interaction.user.id},
+        await platformstatsModel.findOneAndUpdate({ identityId: profileData.identityId },
             {
                 $inc: {
-                    coins: value,
+                    balance: value,
                 },
             }
         );

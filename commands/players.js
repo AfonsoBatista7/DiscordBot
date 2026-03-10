@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const serverStatsModel = require('../models/serverStatsSchema');
+const gamestatModel = require('../models/gamestatSchema');
+const identityModel = require('../models/identitySchema');
 require('dotenv').config();
 
 const PLAYERS_PER_PAGE = 25;
@@ -16,30 +17,36 @@ module.exports = {
         const { client, Discord } = options;
         
         try {
-            const allPlayers = await serverStatsModel.find().sort({ timePlayedMinutes: -1 });
-            
-            if (allPlayers.length === 0) {
+            const [allGameStats, allIdentities] = await Promise.all([
+                gamestatModel.find().sort({ timePlayedMinutes: -1 }),
+                identityModel.find({ provider: 'minecraft' }),
+            ]);
+
+            const identityMap = {};
+            allIdentities.forEach(id => { identityMap[String(id._id)] = id.username || 'Unknown'; });
+
+            if (allGameStats.length === 0) {
                 await interaction.reply('No players found on the server.');
                 return;
             }
 
             let currentPage = 0;
-            const totalPages = Math.ceil(allPlayers.length / PLAYERS_PER_PAGE);
+            const totalPages = Math.ceil(allGameStats.length / PLAYERS_PER_PAGE);
 
             const createEmbed = (page) => {
                 const startIndex = page * PLAYERS_PER_PAGE;
-                const endIndex = Math.min(startIndex + PLAYERS_PER_PAGE, allPlayers.length);
-                const playersOnPage = allPlayers.slice(startIndex, endIndex);
+                const endIndex = Math.min(startIndex + PLAYERS_PER_PAGE, allGameStats.length);
+                const playersOnPage = allGameStats.slice(startIndex, endIndex);
 
                 const embed = new Discord.MessageEmbed()
                     .setTitle(`All Players (Page ${page + 1}/${totalPages})`)
                     .setColor('#ADFF2F')
-                    .setFooter({ text: `Showing ${startIndex + 1}-${endIndex} of ${allPlayers.length} players` });
+                    .setFooter({ text: `Showing ${startIndex + 1}-${endIndex} of ${allGameStats.length} players` });
 
                 for (const player of playersOnPage) {
                     embed.addFields({
-                        name: `${player.name}`, 
-                        value: `Since: ${player.playerSince}`, 
+                        name: `${identityMap[String(player.identityId)] || 'Unknown'}`,
+                        value: `Since: ${player.playerSince ?? 'N/A'}`,
                         inline: true
                     });
                 }

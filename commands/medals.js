@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const serverStatsModel = require('../models/serverStatsSchema');
+const gamestatModel = require('../models/gamestatSchema');
+const identityModel = require('../models/identitySchema');
 require('dotenv').config();
 
 module.exports = {
@@ -19,14 +20,15 @@ module.exports = {
         const playerName = interaction.options.getString('player');
 
         try {
-            const serverStatsData = await serverStatsModel.findOne({name: playerName});
+            const identity = await identityModel.findOne({ username: playerName, provider: 'minecraft' });
+            const gamestatData = identity ? await gamestatModel.findOne({ identityId: identity._id }) : null;
 
-            if(!serverStatsData) {
-                await interaction.reply(`:x: | The player **${playerName}** never played on \`${process.env.MINECRAFT_SERVER_IP.split('.')[0]}\` server.`);
+            if(!gamestatData) {
+                await interaction.reply(`:x: | The player **${playerName}** never played on this server.`);
                 return;
             }
 
-            let onlineMessage = serverStatsData.online ? "🟢 Online" : "🔴 Offline";
+            let onlineMessage = gamestatData.status ? "🟢 Online" : "🔴 Offline";
             const embed = new Discord.MessageEmbed()
                 .setTitle(`${playerName} Medals`)
                 .setColor('#ADFF2F')
@@ -34,10 +36,10 @@ module.exports = {
                 .setTimestamp()
                 .setFooter({text: `${onlineMessage}`});
 
-            for(const i in serverStatsData.medals) {
+            for(const i in gamestatData.medals) {
                 embed.addFields({
-                    name: `${serverStatsData.medals[i].medalName}`,
-                    value: `${serverStatsData.medals[i].medalLevel}`,
+                    name: `${gamestatData.medals[i].medalName}`,
+                    value: `${gamestatData.medals[i].medalLevel}`,
                     inline: true
                 });
             }
