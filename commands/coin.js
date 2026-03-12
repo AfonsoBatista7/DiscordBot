@@ -34,12 +34,12 @@ module.exports = {
         const money = interaction.options.getInteger('amount');
 
         if (money <= 0) {
-            await interaction.reply(ERRORS.INVALID_AMOUNT);
+            await interaction.editReply(ERRORS.INVALID_AMOUNT);
             return;
         }
 
         if (profileData.balance < money) {
-            await interaction.reply(ERRORS.INSUFFICIENT_FUNDS);
+            await interaction.editReply(ERRORS.INSUFFICIENT_FUNDS);
             return;
         }
 
@@ -75,10 +75,10 @@ module.exports = {
                 .setAuthor({name: `${result.toUpperCase()}!`, iconURL: avatar})
                 .setDescription(mensagem);
 
-            await interaction.reply({embeds: [embed]});
+            await interaction.editReply({embeds: [embed]});
         } catch (error) {
             console.error('Database error in coin command:', error);
-            await interaction.reply(':x: | Something went wrong, please try again');
+            await interaction.editReply(':x: | Something went wrong, please try again');
         }
     }
 }

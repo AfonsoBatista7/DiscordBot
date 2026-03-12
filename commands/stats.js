@@ -50,14 +50,14 @@ module.exports = {
                     if (!mcIdentity) throw new Error('MC identity not found');
                     playerName = mcIdentity.username;
                 } else {
-                    await interaction.reply(ERRORS.NO_PLAYER_NAME);
+                    await interaction.editReply(ERRORS.NO_PLAYER_NAME);
                     return;
                 }
             } else {
                 playerName = playerOption;
                 mcIdentity = await identityModel.findOne({ username: playerName, provider: 'minecraft' });
                 if (!mcIdentity) {
-                    await interaction.reply(ERRORS.PLAYER_NOT_FOUND(playerName));
+                    await interaction.editReply(ERRORS.PLAYER_NOT_FOUND(playerName));
                     return;
                 }
             }
@@ -68,7 +68,7 @@ module.exports = {
             if (serverOption) {
                 const server = await serversModel.findOne({ name: { $regex: new RegExp(serverOption, 'i') } });
                 if (!server) {
-                    await interaction.reply(`:x: | No server found with name **${serverOption}**.`);
+                    await interaction.editReply(`:x: | No server found with name **${serverOption}**.`);
                     return;
                 }
                 serverFilter = { serverId: String(server._id) };
@@ -79,7 +79,7 @@ module.exports = {
             const allGameStats = await gamestatModel.find({ identityId: mcIdentity._id, ...serverFilter });
 
             if (allGameStats.length === 0) {
-                await interaction.reply(ERRORS.PLAYER_NOT_FOUND(playerName));
+                await interaction.editReply(ERRORS.PLAYER_NOT_FOUND(playerName));
                 return;
             }
 
@@ -99,7 +99,7 @@ module.exports = {
                     .setDescription(`This player has stats on multiple servers. Use \`/stats player:${playerName} server:<name>\` to view a specific one.\n\n${serverList}`)
                     .setThumbnail(`https://minotar.net/helm/${playerName}/100.png`);
 
-                await interaction.reply({ embeds: [embed] });
+                await interaction.editReply({ embeds: [embed] });
                 return;
             }
 
@@ -131,11 +131,11 @@ module.exports = {
                 .setTimestamp()
                 .setFooter({text: `${onlineMessage}`});
 
-            await interaction.reply({embeds: [embed]});
+            await interaction.editReply({embeds: [embed]});
             
         } catch(error) {
             console.error('Database error in stats command:', error);
-            await interaction.reply(ERRORS.DATABASE_ERROR);
+            await interaction.editReply(ERRORS.DATABASE_ERROR);
         }
     }
 }

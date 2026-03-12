@@ -22,7 +22,7 @@ module.exports = {
                 const server = await serversModel.findOne({ name: { $regex: new RegExp(serverName, 'i') } });
 
                 if (!server) {
-                    await interaction.reply(`:x: | No server found with name **${serverName}**.`);
+                    await interaction.editReply(`:x: | No server found with name **${serverName}**.`);
                     return;
                 }
 
@@ -38,13 +38,13 @@ module.exports = {
                     )
                     .setTimestamp();
 
-                await interaction.reply({ embeds: [embed] });
+                await interaction.editReply({ embeds: [embed] });
 
             } else {
                 const servers = await serversModel.find();
 
                 if (servers.length === 0) {
-                    await interaction.reply(':x: | No servers found in the database.');
+                    await interaction.editReply(':x: | No servers found in the database.');
                     return;
                 }
 
@@ -62,12 +62,12 @@ module.exports = {
                     });
                 }
 
-                await interaction.reply({ embeds: [embed] });
+                await interaction.editReply({ embeds: [embed] });
             }
 
         } catch (error) {
             console.log('Server command error:', error);
-            await interaction.reply(':x: | Something went wrong while fetching server information.');
+            await interaction.editReply(':x: | Something went wrong while fetching server information.');
         }
     }
 }

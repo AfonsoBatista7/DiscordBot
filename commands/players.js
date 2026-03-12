@@ -26,7 +26,7 @@ module.exports = {
             allIdentities.forEach(id => { identityMap[String(id._id)] = id.username || 'Unknown'; });
 
             if (allGameStats.length === 0) {
-                await interaction.reply('No players found on the server.');
+                await interaction.editReply('No players found on the server.');
                 return;
             }
 
@@ -73,7 +73,7 @@ module.exports = {
             const embed = createEmbed(currentPage);
             const row = createButtons(currentPage);
 
-            const response = await interaction.reply({
+            const response = await interaction.editReply({
                 embeds: [embed],
                 components: totalPages > 1 ? [row] : [],
                 fetchReply: true
@@ -127,7 +127,7 @@ module.exports = {
 
         } catch (error) {
             console.error('Error in players command:', error);
-            await interaction.reply(':x: | Something went wrong while fetching players.');
+            await interaction.editReply(':x: | Something went wrong while fetching players.');
         }
     }
 }
