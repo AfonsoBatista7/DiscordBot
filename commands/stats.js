@@ -1,5 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const serverStatsModel = require('../models/serverStatsSchema');
+const gamestatModel = require('../models/gamestatSchema');
+const identityModel = require('../models/identitySchema');
+const serversModel = require('../models/serversSchema');
 require('dotenv').config();
 
 const ERRORS = {
@@ -22,6 +24,10 @@ module.exports = {
         .addStringOption(option =>
             option.setName('player')
                 .setDescription('The name of the player')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('server')
+                .setDescription('The name of the server to get stats from')
                 .setRequired(false)),
     name: 'stats',
     aliases: ['serverstats', 'minestats'],
@@ -30,55 +36,97 @@ module.exports = {
     async execute(interaction, options) {
         const { client, Discord, profileData } = options;
         let playerName;
-        let serverStatsData;
+        let gamestatData;
 
         try {
-            // Get player name from slash command option or use linked profile
             const playerOption = interaction.options.getString('player');
+            const serverOption = interaction.options.getString('server');
 
+            // Resolve which MC identity we're looking up
+            let mcIdentity;
             if (!playerOption) {
-                if (profileData.link != null) {
-                    serverStatsData =
-                        await serverStatsModel.findOne({link: profileData.userId});
-
-                    if(!serverStatsData) throw error;
-                    playerName = serverStatsData.name;
+                if (profileData.mcIdentityId != null) {
+                    mcIdentity = await identityModel.findOne({ _id: profileData.mcIdentityId });
+                    if (!mcIdentity) throw new Error('MC identity not found');
+                    playerName = mcIdentity.username;
                 } else {
                     await interaction.reply(ERRORS.NO_PLAYER_NAME);
                     return;
                 }
             } else {
                 playerName = playerOption;
-                serverStatsData =
-                    await serverStatsModel.findOne({name: playerName})
+                mcIdentity = await identityModel.findOne({ username: playerName, provider: 'minecraft' });
+                if (!mcIdentity) {
+                    await interaction.reply(ERRORS.PLAYER_NOT_FOUND(playerName));
+                    return;
+                }
             }
-                
 
-            if (!serverStatsData) {
+            // Resolve server filter
+            let serverFilter = {};
+            let serverName = null;
+            if (serverOption) {
+                const server = await serversModel.findOne({ name: { $regex: new RegExp(serverOption, 'i') } });
+                if (!server) {
+                    await interaction.reply(`:x: | No server found with name **${serverOption}**.`);
+                    return;
+                }
+                serverFilter = { serverId: String(server._id) };
+                serverName = server.name;
+            }
+
+            // Find gamestats for this player (optionally filtered by server)
+            const allGameStats = await gamestatModel.find({ identityId: mcIdentity._id, ...serverFilter });
+
+            if (allGameStats.length === 0) {
                 await interaction.reply(ERRORS.PLAYER_NOT_FOUND(playerName));
                 return;
             }
 
-            let onlineMessage = serverStatsData.online ? "🟢 Online" : "🔴 Offline";
+            // If multiple servers and no server specified, show the list
+            if (allGameStats.length > 1 && !serverOption) {
+                const serverDocs = await serversModel.find({ _id: { $in: allGameStats.map(g => g.serverId) } });
+                const serverNameMap = {};
+                serverDocs.forEach(s => { serverNameMap[String(s._id)] = s.name || s.ip; });
+
+                const serverList = allGameStats
+                    .map(g => `• **${serverNameMap[String(g.serverId)] || g.serverId}**`)
+                    .join('\n');
+
+                const embed = new Discord.MessageEmbed()
+                    .setTitle(`${playerName} — Multiple Servers`)
+                    .setColor('#ADFF2F')
+                    .setDescription(`This player has stats on multiple servers. Use \`/stats player:${playerName} server:<name>\` to view a specific one.\n\n${serverList}`)
+                    .setThumbnail(`https://minotar.net/helm/${playerName}/100.png`);
+
+                await interaction.reply({ embeds: [embed] });
+                return;
+            }
+
+            gamestatData = allGameStats[0];
+
+            const s = gamestatData.stats || {};
+            let onlineMessage = gamestatData.status ? "🟢 Online" : "🔴 Offline";
+            if (serverName) onlineMessage += ` · ${serverName}`;
 
             const embed = new Discord.MessageEmbed()
                 .setTitle(`${playerName} Stats`)
                 .setColor('#ADFF2F')
                 .setThumbnail(`https://minotar.net/helm/${playerName}/100.png`)
                 .addFields({
-                    name: 'Name', value: `${serverStatsData.name}` },{
-                    name: 'Blocks Placed', value: `${serverStatsData.blcksPlaced}`, inline: true },{
-                    name: 'Blocks Destroyed', value: `${serverStatsData.blcksDestroyed}`, inline: true },{
-                    name: 'Blocks Mined', value: `${serverStatsData.blockMined}` , inline: true},{
-                    name: 'Kills', value: `${serverStatsData.kills}`, inline: true },{
-                    name: 'Mob Kills', value: `${serverStatsData.mobKills}` , inline: true},{
-                    name: 'Deaths', value: `${serverStatsData.deaths}` , inline: true},{
-                    name: 'Fish Caught', value: `${serverStatsData.fishCaught}` },{
-                    name: 'Times Login', value: `${serverStatsData.timeslogin}` },{
-                    name: 'Last Login', value: `${serverStatsData.lastLogin}` , inline: true},{
-                    name: 'Player Since', value: `${serverStatsData.playerSince}` , inline: true},{
-                    name: 'Time Played', value: `${TimeMinutesToString(serverStatsData.timePlayedMinutes)}` , inline: true},{
-                    name: 'Time AFK', value: `${TimeMinutesToString(serverStatsData.timeAFKMinutes)}` , inline: true}
+                    name: 'Name', value: `${playerName}` },{
+                    name: 'Blocks Placed', value: `${s.blcksPlaced ?? 0}`, inline: true },{
+                    name: 'Blocks Destroyed', value: `${s.blcksDestroyed ?? 0}`, inline: true },{
+                    name: 'Blocks Mined', value: `${s.blockMined ?? 0}`, inline: true },{
+                    name: 'Kills', value: `${s.kills ?? 0}`, inline: true },{
+                    name: 'Mob Kills', value: `${s.mobKills ?? 0}`, inline: true },{
+                    name: 'Deaths', value: `${s.deaths ?? 0}`, inline: true },{
+                    name: 'Fish Caught', value: `${s.fishCaught ?? 0}` },{
+                    name: 'Times Login', value: `${s.timeslogin ?? 0}` },{
+                    name: 'Last Login', value: `${gamestatData.lastLogin ?? 'N/A'}`, inline: true },{
+                    name: 'Player Since', value: `${gamestatData.playerSince ?? 'N/A'}`, inline: true },{
+                    name: 'Time Played', value: `${TimeMinutesToString(gamestatData.timePlayedMinutes ?? 0)}`, inline: true },{
+                    name: 'Time AFK', value: `${TimeMinutesToString(gamestatData.timeAFKMinutes ?? 0)}`, inline: true }
                 )
                 .setTimestamp()
                 .setFooter({text: `${onlineMessage}`});

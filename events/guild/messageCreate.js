@@ -1,5 +1,7 @@
 
-const profileModel = require('../../models/profileSchema');
+const platformstatsModel = require('../../models/platformstatsSchema');
+const identityModel = require('../../models/identitySchema');
+const userModel = require('../../models/userSchema');
 
 const cooldowns = new Map();
 
@@ -11,31 +13,65 @@ module.exports = async (Discord, client, message) => {
     const user = message.mentions.users.first() || message.author;
 
     if(message.author.bot) return;
-    
+
     const isCommand = message.content.startsWith(prefix);
-    
+
     try{
-        profileData = await profileModel.findOne({ userId: user.id })
-        if(!profileData) {
-            let profile = await profileModel.create({
-                userId: user.id,
-                userName: user.username,
-                coins: 250,
+        let discordIdentity = await identityModel.findOne({ externalId: user.id, provider: 'discord' });
+        if (!discordIdentity) {
+            const newUser = await userModel.create({});
+            discordIdentity = await identityModel.create({
+                userId: newUser._id,
+                externalId: user.id,
+                username: user.username,
+                provider: 'discord',
+            });
+        }
+
+        let platformstats = await platformstatsModel.findOne({ identityId: discordIdentity._id });
+        if (!platformstats) {
+            platformstats = await platformstatsModel.create({
+                identityId: discordIdentity._id,
+                balance: 250,
                 numMessages: 0,
             });
-            profile.save();
+            await platformstats.save();
         }
+
+        const mcIdentity = discordIdentity.userId
+            ? await identityModel.findOne({ userId: discordIdentity.userId, provider: 'minecraft' })
+            : null;
+
+        profileData = {
+            userId: user.id,
+            identityId: discordIdentity._id,
+            physicalUserId: discordIdentity.userId,
+            userName: user.username,
+            balance: platformstats.balance,
+            coins: platformstats.balance,
+            numMessages: platformstats.numMessages,
+            link: mcIdentity ? mcIdentity.externalId : null,
+            mcUsername: mcIdentity ? mcIdentity.username : null,
+            mcIdentityId: mcIdentity ? mcIdentity._id : null,
+        };
 
         // Only give coins for regular messages, not commands
         if (!isCommand) {
-            await profileModel.findOneAndUpdate({userId: message.author.id},
-                {
-                    $inc: {
-                        numMessages: 1,
-                        coins: 1,
-                    },
-                }
-            );
+            // Find author's identity if different from user
+            const authorIdentity = user.id === message.author.id
+                ? discordIdentity
+                : await identityModel.findOne({ externalId: message.author.id, provider: 'discord' });
+
+            if (authorIdentity) {
+                await platformstatsModel.findOneAndUpdate({ identityId: authorIdentity._id },
+                    {
+                        $inc: {
+                            numMessages: 1,
+                            balance: 1,
+                        },
+                    }
+                );
+            }
         }
         
     } catch(err) {

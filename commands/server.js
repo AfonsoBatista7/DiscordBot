@@ -1,113 +1,73 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const https = require('https');
-require('dotenv').config();
+const serversModel = require('../models/serversSchema');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('server')
-        .setDescription('Get information about the Minecraft server')
+        .setDescription('Get information about the Minecraft servers')
         .addStringOption(option =>
-            option.setName('info')
-                .setDescription('What information to show')
-                .setRequired(false)
-                .addChoices(
-                    { name: 'IP Address', value: 'ip' },
-                    { name: 'Version', value: 'version' }
-                )),
+            option.setName('name')
+                .setDescription('The name of the server to get details for')
+                .setRequired(false)),
     name: 'server',
-    aliases: ['serv','ser'],
+    aliases: ['serv', 'ser'],
     cooldown: 10,
-    description: 'Tells the user the a lot of information about the minecraft nostalgia server.',
+    description: 'Shows information about all available Minecraft servers.',
     async execute(interaction, options) {
-        const { client, Discord } = options;
-        const infoType = interaction.options.getString('info');
-        
-        const checkServer = (serverIP) => {
-            return new Promise((resolve, reject) => {
-                const url = `https://api.mcstatus.io/v2/status/java/${serverIP}`;
-                https.get(url, (res) => {
-                    let data = '';
-                    res.on('data', chunk => data += chunk);
-                    res.on('end', () => {
-                        try {
-                            // Check if response looks like JSON
-                            if (data.startsWith('<') || !data.startsWith('{')) {
-                                reject(new Error('API returned non-JSON response'));
-                                return;
-                            }
-                            const parsed = JSON.parse(data);
-                            resolve(parsed);
-                        } catch (error) {
-                            reject(new Error(`Failed to parse response: ${error.message}`));
-                        }
-                    });
-                }).on('error', reject);
-            });
-        };
+        const { Discord } = options;
+        const serverName = interaction.options.getString('name');
 
         try {
-            const response = await checkServer(process.env.MINECRAFT_SERVER_IP);
-            
-            if (!response.online) {
-                const offlineEmbed = new Discord.MessageEmbed()
-                    .setColor('#FF0000')
-                    .setTitle('`--Minecraft Nostalgia Server--`')
+            if (serverName) {
+                const server = await serversModel.findOne({ name: { $regex: new RegExp(serverName, 'i') } });
+
+                if (!server) {
+                    await interaction.reply(`:x: | No server found with name **${serverName}**.`);
+                    return;
+                }
+
+                const statusIcon = server.status ? '🟢 Online' : '🔴 Offline';
+                const embed = new Discord.MessageEmbed()
+                    .setColor(server.status ? '#ADFF2F' : '#FF0000')
+                    .setTitle(`${server.name}`)
                     .addFields(
-                        { name: 'Status', value: '🔴 Offline'},
-                        { name: 'Server IP', value: process.env.MINECRAFT_SERVER_IP }
+                        { name: 'Status', value: statusIcon },
+                        { name: 'IP Address', value: server.ip },
+                        { name: 'Region', value: server.region || 'N/A', inline: true },
+                        { name: 'Provider', value: server.provider || 'N/A', inline: true },
                     )
-                    .setDescription('The server is not online now :(');
-                await interaction.reply({embeds: [offlineEmbed]});
-                return;
+                    .setTimestamp();
+
+                await interaction.reply({ embeds: [embed] });
+
+            } else {
+                const servers = await serversModel.find();
+
+                if (servers.length === 0) {
+                    await interaction.reply(':x: | No servers found in the database.');
+                    return;
+                }
+
+                const embed = new Discord.MessageEmbed()
+                    .setColor('#ADFF2F')
+                    .setTitle('Minecraft Servers')
+                    .setTimestamp();
+
+                for (const server of servers) {
+                    const statusIcon = server.status ? '🟢 Online' : '🔴 Offline';
+                    embed.addFields({
+                        name: server.name || server.ip,
+                        value: `**IP:** ${server.ip}\n**Status:** ${statusIcon}\n**Region:** ${server.region || 'N/A'}`,
+                        inline: true
+                    });
+                }
+
+                await interaction.reply({ embeds: [embed] });
             }
 
-            const embed=new Discord.MessageEmbed()
-            .setColor('#ADFF2F')
-            .setTitle('`--Minecraft Nostalgia Server--`')
-
-            const serverIP = process.env.MINECRAFT_SERVER_IP;
-            
-            switch(infoType) {
-                case 'ip':
-                    embed.addFields(
-                        { name: 'Status', value: '🟢 Online'},
-                        { name: 'Server IP', value: serverIP }
-                    )
-                    break;
-                case 'version':
-                    embed.addFields(
-                        { name: 'Status', value: '🟢 Online'},
-                        { name: 'Version', value: response.version?.name_clean || response.version?.name || 'Unknown' }
-                    )
-                    break;
-                default:
-                    const version = response.version?.name_clean || response.version?.name || 'Unknown';
-                    const playersOnline = response.players?.online ?? 0;
-                    const playersMax = response.players?.max ?? 0;
-                    
-                    embed.addFields(
-                        { name: 'Status', value: '🟢 Online'},
-                        { name: 'Server IP', value: serverIP },
-                        { name: 'Version', value: version },
-                        { name: 'Online Players', value: `${playersOnline}/${playersMax}` }
-                    )
-            } 
-            await interaction.reply({embeds: [embed]});
-        
-        } catch(error) {
+        } catch (error) {
             console.log('Server command error:', error);
-            console.log('MINECRAFT_SERVER_IP value:', process.env.MINECRAFT_SERVER_IP);
-            
-            const serverIP = process.env.MINECRAFT_SERVER_IP;
-            const errorEmbed = new Discord.MessageEmbed()
-                .setColor('#FF0000')
-                .setTitle('`--Minecraft Nostalgia Server--`')
-                .addFields(
-                    { name: 'Status', value: '🔴 Offline'},
-                    { name: 'Server IP', value: serverIP }
-                )
-                .setDescription('The server is not online now :(');
-            await interaction.reply({embeds: [errorEmbed]});
+            await interaction.reply(':x: | Something went wrong while fetching server information.');
         }
     }
 }
