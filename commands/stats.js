@@ -11,10 +11,9 @@ const ERRORS = {
 };
 
 function TimeMinutesToString(timeMinutes) {
-    let hours = Math.floor(timeMinutes/60);
-    let minutes = (timeMinutes % 60);
-
-    return minutes==0 ? `${hours} Hours` : `${hours} Hr ${minutes} Min`;
+    const hours = Math.floor(timeMinutes / 60);
+    const minutes = timeMinutes % 60;
+    return minutes === 0 ? `${hours} Hours` : `${hours} Hr ${minutes} Min`;
 }
 
 module.exports = {
@@ -24,23 +23,16 @@ module.exports = {
         .addStringOption(option =>
             option.setName('player')
                 .setDescription('The name of the player')
-                .setRequired(false))
-        .addStringOption(option =>
-            option.setName('server')
-                .setDescription('The name of the server to get stats from')
                 .setRequired(false)),
     name: 'stats',
     aliases: ['serverstats', 'minestats'],
     cooldown: 5,
     description: "Minecraft Server Stats of a player",
     async execute(interaction, options) {
-        const { client, Discord, profileData } = options;
-        let playerName;
-        let gamestatData;
+        const { Discord, profileData } = options;
 
         try {
             const playerOption = interaction.options.getString('player');
-            const serverOption = interaction.options.getString('server');
 
             // Resolve which MC identity we're looking up
             let mcIdentity;
@@ -48,94 +40,109 @@ module.exports = {
                 if (profileData.mcIdentityId != null) {
                     mcIdentity = await identityModel.findOne({ _id: profileData.mcIdentityId });
                     if (!mcIdentity) throw new Error('MC identity not found');
-                    playerName = mcIdentity.username;
                 } else {
                     await interaction.editReply(ERRORS.NO_PLAYER_NAME);
                     return;
                 }
             } else {
-                playerName = playerOption;
-                mcIdentity = await identityModel.findOne({ username: playerName, provider: 'minecraft' });
+                mcIdentity = await identityModel.findOne({ username: playerOption, provider: 'minecraft' });
                 if (!mcIdentity) {
-                    await interaction.editReply(ERRORS.PLAYER_NOT_FOUND(playerName));
+                    await interaction.editReply(ERRORS.PLAYER_NOT_FOUND(playerOption));
                     return;
                 }
             }
 
-            // Resolve server filter
-            let serverFilter = {};
-            let serverName = null;
-            if (serverOption) {
-                const server = await serversModel.findOne({ name: { $regex: new RegExp(serverOption, 'i') } });
-                if (!server) {
-                    await interaction.editReply(`:x: | No server found with name **${serverOption}**.`);
-                    return;
-                }
-                serverFilter = { serverId: String(server._id) };
-                serverName = server.name;
-            }
-
-            // Find gamestats for this player (optionally filtered by server)
-            const allGameStats = await gamestatModel.find({ identityId: mcIdentity._id, ...serverFilter });
+            const playerName = mcIdentity.username;
+            const allGameStats = await gamestatModel.find({ identityId: mcIdentity._id });
 
             if (allGameStats.length === 0) {
                 await interaction.editReply(ERRORS.PLAYER_NOT_FOUND(playerName));
                 return;
             }
 
-            // If multiple servers and no server specified, show the list
-            if (allGameStats.length > 1 && !serverOption) {
-                const serverDocs = await serversModel.find({ _id: { $in: allGameStats.map(g => g.serverId) } });
-                const serverNameMap = {};
-                serverDocs.forEach(s => { serverNameMap[String(s._id)] = s.name || s.ip; });
-
-                const serverList = allGameStats
-                    .map(g => `• **${serverNameMap[String(g.serverId)] || g.serverId}**`)
-                    .join('\n');
-
-                const embed = new Discord.MessageEmbed()
-                    .setTitle(`${playerName} — Multiple Servers`)
-                    .setColor('#ADFF2F')
-                    .setDescription(`This player has stats on multiple servers. Use \`/stats player:${playerName} server:<name>\` to view a specific one.\n\n${serverList}`)
-                    .setThumbnail(`https://minotar.net/helm/${playerName}/100.png`);
-
-                await interaction.editReply({ embeds: [embed] });
+            if (allGameStats.length === 1) {
+                await showStats(interaction, Discord, playerName, allGameStats[0]);
                 return;
             }
 
-            gamestatData = allGameStats[0];
+            // Multiple servers — show a select menu
+            const serverDocs = await serversModel.find({ _id: { $in: allGameStats.map(g => g.serverId) } });
+            const serverMap = {};
+            serverDocs.forEach(s => { serverMap[String(s._id)] = s; });
 
-            const s = gamestatData.stats || {};
-            let onlineMessage = gamestatData.status ? "🟢 Online" : "🔴 Offline";
-            if (serverName) onlineMessage += ` · ${serverName}`;
+            const selectMenu = new Discord.MessageSelectMenu()
+                .setCustomId('server_select_stats')
+                .setPlaceholder('Choose a server...')
+                .addOptions(allGameStats.map(g => {
+                    const s = serverMap[String(g.serverId)];
+                    return {
+                        label: s ? (s.name || s.ip) : g.serverId,
+                        description: s ? `${s.ip} · ${s.status ? '🟢 Online' : '🔴 Offline'}` : 'Unknown server',
+                        value: String(g._id),
+                    };
+                }));
 
-            const embed = new Discord.MessageEmbed()
-                .setTitle(`${playerName} Stats`)
-                .setColor('#ADFF2F')
-                .setThumbnail(`https://minotar.net/helm/${playerName}/100.png`)
-                .addFields({
-                    name: 'Name', value: `${playerName}` },{
-                    name: 'Blocks Placed', value: `${s.blcksPlaced ?? 0}`, inline: true },{
-                    name: 'Blocks Destroyed', value: `${s.blcksDestroyed ?? 0}`, inline: true },{
-                    name: 'Blocks Mined', value: `${s.blockMined ?? 0}`, inline: true },{
-                    name: 'Kills', value: `${s.kills ?? 0}`, inline: true },{
-                    name: 'Mob Kills', value: `${s.mobKills ?? 0}`, inline: true },{
-                    name: 'Deaths', value: `${s.deaths ?? 0}`, inline: true },{
-                    name: 'Fish Caught', value: `${s.fishCaught ?? 0}` },{
-                    name: 'Times Login', value: `${s.timeslogin ?? 0}` },{
-                    name: 'Last Login', value: `${gamestatData.lastLogin ?? 'N/A'}`, inline: true },{
-                    name: 'Player Since', value: `${gamestatData.playerSince ?? 'N/A'}`, inline: true },{
-                    name: 'Time Played', value: `${TimeMinutesToString(gamestatData.timePlayedMinutes ?? 0)}`, inline: true },{
-                    name: 'Time AFK', value: `${TimeMinutesToString(gamestatData.timeAFKMinutes ?? 0)}`, inline: true }
-                )
-                .setTimestamp()
-                .setFooter({text: `${onlineMessage}`});
+            const response = await interaction.editReply({
+                content: `**${playerName}** has played on multiple servers. Select one:`,
+                components: [new Discord.MessageActionRow().addComponents(selectMenu)],
+                fetchReply: true,
+            });
 
-            await interaction.editReply({embeds: [embed]});
-            
+            const collector = response.createMessageComponentCollector({
+                componentType: 'SELECT_MENU',
+                time: 30000,
+            });
+
+            collector.on('collect', async (selectInteraction) => {
+                if (selectInteraction.user.id !== interaction.user.id) {
+                    await selectInteraction.reply({ content: 'This menu is not for you!', ephemeral: true });
+                    return;
+                }
+                const gamestat = allGameStats.find(g => String(g._id) === selectInteraction.values[0]);
+                await selectInteraction.deferUpdate();
+                await showStats(interaction, Discord, playerName, gamestat, serverMap[String(gamestat.serverId)]);
+            });
+
+            collector.on('end', (_, reason) => {
+                if (reason === 'time') {
+                    interaction.editReply({ content: 'Server selection timed out.', components: [] }).catch(() => {});
+                }
+            });
+
         } catch(error) {
             console.error('Database error in stats command:', error);
             await interaction.editReply(ERRORS.DATABASE_ERROR);
         }
     }
+};
+
+async function showStats(interaction, Discord, playerName, gamestatData, server) {
+    const s = gamestatData.stats || {};
+    const serverLabel = server ? server.name : null;
+    let footer = gamestatData.status ? '🟢 Online' : '🔴 Offline';
+    if (serverLabel) footer += ` · ${serverLabel}`;
+
+    const embed = new Discord.MessageEmbed()
+        .setTitle(`${playerName} Stats`)
+        .setColor('#ADFF2F')
+        .setThumbnail(`https://minotar.net/helm/${playerName}/100.png`)
+        .addFields(
+            { name: 'Name',             value: `${playerName}` },
+            { name: 'Blocks Placed',    value: `${s.blcksPlaced ?? 0}`,    inline: true },
+            { name: 'Blocks Destroyed', value: `${s.blcksDestroyed ?? 0}`, inline: true },
+            { name: 'Blocks Mined',     value: `${s.blockMined ?? 0}`,     inline: true },
+            { name: 'Kills',            value: `${s.kills ?? 0}`,          inline: true },
+            { name: 'Mob Kills',        value: `${s.mobKills ?? 0}`,       inline: true },
+            { name: 'Deaths',           value: `${s.deaths ?? 0}`,         inline: true },
+            { name: 'Fish Caught',      value: `${s.fishCaught ?? 0}` },
+            { name: 'Times Login',      value: `${s.timeslogin ?? 0}` },
+            { name: 'Last Login',       value: `${gamestatData.lastLogin ?? 'N/A'}`,                          inline: true },
+            { name: 'Player Since',     value: `${gamestatData.playerSince ?? 'N/A'}`,                        inline: true },
+            { name: 'Time Played',      value: `${TimeMinutesToString(gamestatData.timePlayedMinutes ?? 0)}`, inline: true },
+            { name: 'Time AFK',         value: `${TimeMinutesToString(gamestatData.timeAFKMinutes ?? 0)}`,    inline: true },
+        )
+        .setTimestamp()
+        .setFooter({ text: footer });
+
+    await interaction.editReply({ content: null, embeds: [embed], components: [] });
 }

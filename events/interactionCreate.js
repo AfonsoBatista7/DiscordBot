@@ -45,14 +45,19 @@ module.exports = {
                 userId: interaction.user.id,
                 identityId: discordIdentity._id,
                 physicalUserId: discordIdentity.userId,
-                userName: interaction.user.username,
+                userName: discordIdentity.username,
                 balance: platformstats.balance,
                 coins: platformstats.balance,
-                numMessages: platformstats.numMessages,
+                numMessages: platformstats.numMessages ?? 0,
                 link: mcIdentity ? mcIdentity.externalId : null,
                 mcUsername: mcIdentity ? mcIdentity.username : null,
                 mcIdentityId: mcIdentity ? mcIdentity._id : null,
             };
+
+            console.log('[interactionCreate] discordIdentity:', JSON.stringify(discordIdentity));
+            console.log('[interactionCreate] platformstats:', JSON.stringify(platformstats));
+            console.log('[interactionCreate] mcIdentity:', JSON.stringify(mcIdentity));
+            console.log('[interactionCreate] profileData:', JSON.stringify(profileData));
 
             const options = {
                 client,
