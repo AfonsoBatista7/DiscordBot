@@ -35,19 +35,19 @@ module.exports = {
         const value = interaction.options.getInteger('amount');
 
         if (value <= 0) {
-            await interaction.reply(ERRORS.INVALID_AMOUNT);
+            await interaction.editReply(ERRORS.INVALID_AMOUNT);
             return;
         }
 
         try {
             if (profileData.balance < value) {
-                await interaction.reply(ERRORS.INSUFFICIENT_FUNDS);
+                await interaction.editReply(ERRORS.INSUFFICIENT_FUNDS);
                 return;
             }
 
             const recipientIdentity = await identityModel.findOne({ externalId: userMentioned.id, provider: 'discord' });
             if (!recipientIdentity) {
-                await interaction.reply(ERRORS.USER_NO_PROFILE(userMentioned.id));
+                await interaction.editReply(ERRORS.USER_NO_PROFILE(userMentioned.id));
                 return;
             }
 
@@ -67,15 +67,15 @@ module.exports = {
                 .setAuthor({name: `Received from ${interaction.user.username}`, iconURL: avatar})
                 .setDescription(`💰 | ${interaction.user.username} gave +${value} 💸 to <@${userMentioned.id}>`);
 
-            await interaction.reply({embeds: [embed]});
+            await interaction.editReply({embeds: [embed]});
 
         } catch(error) {
             // Check if error is because recipient has no profile
             if (error.message && error.message.includes('null')) {
-                await interaction.reply(ERRORS.USER_NO_PROFILE(userMentioned.id));
+                await interaction.editReply(ERRORS.USER_NO_PROFILE(userMentioned.id));
             } else {
                 console.error('Database error in give command:', error);
-                await interaction.reply(ERRORS.DATABASE_ERROR);
+                await interaction.editReply(ERRORS.DATABASE_ERROR);
             }
         }
     }

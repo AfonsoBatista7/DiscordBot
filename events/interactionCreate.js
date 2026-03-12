@@ -12,6 +12,8 @@ module.exports = {
         if (!command) return;
 
         try {
+            await interaction.deferReply();
+
             // Find or create Discord identity by externalId (Discord user ID)
             let discordIdentity = await identityModel.findOne({ externalId: interaction.user.id, provider: 'discord' });
             if (!discordIdentity) {
@@ -63,11 +65,7 @@ module.exports = {
             console.error('Error executing slash command:', error);
             const errorMessage = 'There was an error while executing this command!';
 
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({ content: errorMessage, ephemeral: true });
-            } else {
-                await interaction.reply({ content: errorMessage, ephemeral: true });
-            }
+            await interaction.editReply({ content: errorMessage });
         }
     },
 };

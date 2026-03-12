@@ -24,7 +24,7 @@ module.exports = {
             const gamestatData = identity ? await gamestatModel.findOne({ identityId: identity._id }) : null;
 
             if(!gamestatData) {
-                await interaction.reply(`:x: | The player **${playerName}** never played on this server.`);
+                await interaction.editReply(`:x: | The player **${playerName}** never played on this server.`);
                 return;
             }
 
@@ -44,11 +44,11 @@ module.exports = {
                 });
             }
 
-            await interaction.reply({embeds: [embed]});
+            await interaction.editReply({embeds: [embed]});
 
         } catch(error) {
             console.log(error);
-            await interaction.reply(':x: | Something went wrong, please try again');
+            await interaction.editReply(':x: | Something went wrong, please try again');
         }
     }
 }

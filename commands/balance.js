@@ -34,6 +34,6 @@ module.exports = {
            .setAuthor({name: '💰 Balance', iconURL: avatar})
            .setDescription(`💸 You have **${balance}$** in your Wallet`);
 
-        await interaction.reply({embeds: [embed]});
+        await interaction.editReply({embeds: [embed]});
     }
 }

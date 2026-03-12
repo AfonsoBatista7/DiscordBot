@@ -32,6 +32,6 @@ module.exports = {
             value: profileData.mcUsername || '???'
         });
 
-        await interaction.reply({embeds: [embed]});
+        await interaction.editReply({embeds: [embed]});
     }
 }

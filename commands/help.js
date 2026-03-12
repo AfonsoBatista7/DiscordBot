@@ -33,6 +33,6 @@ module.exports = {
                 {name: 'Available Commands', value: commandList}
             );
         
-        await interaction.reply({embeds: [embed]});
+        await interaction.editReply({embeds: [embed]});
     }
 }
