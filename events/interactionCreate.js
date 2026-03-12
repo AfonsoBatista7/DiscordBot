@@ -54,11 +54,6 @@ module.exports = {
                 mcIdentityId: mcIdentity ? mcIdentity._id : null,
             };
 
-            console.log('[interactionCreate] discordIdentity:', JSON.stringify(discordIdentity));
-            console.log('[interactionCreate] platformstats:', JSON.stringify(platformstats));
-            console.log('[interactionCreate] mcIdentity:', JSON.stringify(mcIdentity));
-            console.log('[interactionCreate] profileData:', JSON.stringify(profileData));
-
             const options = {
                 client,
                 Discord,
