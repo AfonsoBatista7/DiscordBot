@@ -49,6 +49,7 @@ jobs:
         context: .
         push: true
         platforms: linux/arm64
+        provenance: false
         tags: ${{ steps.meta.outputs.TAGS }}
 
   cleanup:
